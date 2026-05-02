@@ -1,35 +1,83 @@
 [
   {
     "type": "heading",
-    "defaultValue": "Authenticator Setup"
+    "defaultValue": "1. Import"
   },
   {
-    "type": "section",
-    "items": [
-      {
-        "type": "input",
-        "messageKey": "TOTP_EXPORT_DATA",
-        "defaultValue": "",
-        "label": "Stratum Export einfügen",
-        "description": "Füge hier deine otpauth:// Links ein (mehrere Zeilen erlaubt)."
-      }
+    "type": "input",
+    "id": "import_text",
+    "label": "Import",
+    "description": "Paste your otpauth:// links here. Multiple links are allowed."
+  },
+  {
+    "type": "button",
+    "id": "btn_import",
+    "defaultValue": "Import"
+  },
+  {
+    "type": "heading",
+    "defaultValue": "2. Add Manually"
+  },
+  {
+    "type": "input",
+    "id": "manual_name",
+    "label": "Account Name"
+  },
+  {
+    "type": "input",
+    "id": "manual_secret",
+    "label": "Secret Key"
+  },
+  {
+    "type": "button",
+    "id": "btn_add",
+    "defaultValue": "Add"
+  },
+  {
+    "type": "heading",
+    "defaultValue": "3. Manage Accounts"
+  },
+  {
+    "type": "select",
+    "id": "account_dropdown",
+    "label": "Select Account",
+    "options": [
+      { "label": "No Accounts", "value": "-1" }
     ]
+  },
+  {
+    "type": "button",
+    "id": "btn_delete_single",
+    "defaultValue": "Delete Selected Account"
+  },
+  {
+    "type": "button",
+    "id": "btn_clear_all",
+    "defaultValue": "Delete ALL Accounts"
+  },
+  {
+    "type": "heading",
+    "defaultValue": "System"
+  },
+  {
+    "type": "input",
+    "id": "status_bar",
+    "label": "Status Message",
+    "defaultValue": "Ready.",
+    "attributes": {
+      "readonly": true
+    }
+  },
+  {
+    "type": "input",
+    "messageKey": "TOTP_EXPORT_DATA",
+    "id": "hidden_data",
+    "attributes": {
+      "style": "display:none;"
+    }
   },
   {
     "type": "submit",
-    "defaultValue": "Speichern & Senden"
-  },  
-  {
-    "type": "section",
-    "items": [
-      {
-        "type": "button",
-        "id": "clear_btn",
-        "defaultValue": "Alle Accounts löschen",
-        "attributes": {
-          "primary": false
-        }
-      }
-    ]
+    "defaultValue": "Save & Send to Watch"
   }
 ]

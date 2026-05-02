@@ -91,6 +91,10 @@ static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t secti
 }
 
 static int16_t menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  // Wenn keine Accounts da sind, machen wir die Reihe für den Text deutlich höher
+  if (s_num_accounts == 0) {
+    return ROW_HEIGHT * 2; 
+  }
   return ROW_HEIGHT;
 }
 
