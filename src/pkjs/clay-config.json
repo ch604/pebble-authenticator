@@ -1,0 +1,35 @@
+[
+  {
+    "type": "heading",
+    "defaultValue": "Authenticator Setup"
+  },
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "input",
+        "messageKey": "TOTP_EXPORT_DATA",
+        "defaultValue": "",
+        "label": "Stratum Export einfügen",
+        "description": "Füge hier deine otpauth:// Links ein (mehrere Zeilen erlaubt)."
+      }
+    ]
+  },
+  {
+    "type": "submit",
+    "defaultValue": "Speichern & Senden"
+  },  
+  {
+    "type": "section",
+    "items": [
+      {
+        "type": "button",
+        "id": "clear_btn",
+        "defaultValue": "Alle Accounts löschen",
+        "attributes": {
+          "primary": false
+        }
+      }
+    ]
+  }
+]

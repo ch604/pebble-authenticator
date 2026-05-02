@@ -1,0 +1,39 @@
+{
+    "author": "Achi",
+    "dependencies": {
+        "@rebble/clay": "^1.0.8"
+    },
+    "keywords": [],
+    "name": "better-authenticator",
+    "pebble": {
+        "capabilities": [
+            "configurable"
+        ],
+        "displayName": "Better Authenticator",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "CLEAR_ACCOUNTS",
+            "ACCOUNT_NAME",
+            "ACCOUNT_SECRET"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": []
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk",
+            "diorite",
+            "emery",
+            "gabbro",
+            "flint"
+        ],
+        "uuid": "0a8a3e0d-428f-4708-93e7-0c55448d5ab0",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "1.0.0"
+}
