@@ -1,17 +1,6 @@
 module.exports = function() {
   var clayConfig = this;
 
-  // Hilfsfunktion: URL Parameter auslesen
-  function getQueryParam(variable) {
-    var query = window.location.search.substring(1);
-    var vars = query.split('&');
-    for (var i = 0; i < vars.length; i++) {
-      var pair = vars[i].split('=');
-      if (pair[0] == variable) { return decodeURIComponent(pair[1]); }
-    }
-    return false;
-  }
-
   function safeDecode(str) {
     try { return decodeURIComponent(str); } catch (e) { return str; }
   }
@@ -41,58 +30,43 @@ module.exports = function() {
       if (statusBar) statusBar.set(msg);
     }
 
-    // --- SICHERER SPEICHER: Liest die unverwüstlichen Daten ---
+    // Clay saves hidden_data persistently thanks to autoHandleEvents: true in index.js
     function getAccounts() {
       try {
-        var val = window.localStorage.getItem('pebble_totp_accounts');
+        var val = hiddenData.get();
         if (val) return JSON.parse(val);
-        var hiddenVal = hiddenData.get();
-        if (hiddenVal) return JSON.parse(hiddenVal);
       } catch(e) {}
       return [];
     }
 
-    // Sichert die Daten doppelt (Lokal + für die Uhr)
     function saveAccounts(accs) {
-      window.localStorage.setItem('pebble_totp_accounts', JSON.stringify(accs));
       hiddenData.set(JSON.stringify(accs));
     }
 
-    // --- NEU: DIE REPARIERTE DROPDOWN-FUNKTION ---
     function updateUI() {
       var currentAccounts = getAccounts();
-      
-      // Wir holen uns das Dropdown GANZ OFFIZIELL über Clay
       var dropdownItem = clayConfig.getItemById('account_dropdown');
-      
+
       if (dropdownItem && dropdownItem.$element) {
-        // Wir suchen das echte HTML <select> Element innerhalb der Clay-Komponente
         var selectEl = dropdownItem.$element[0].querySelector('select');
-        
+
         if (selectEl) {
-          selectEl.innerHTML = ''; // Alte Auswahlmöglichkeiten löschen
-          
+          selectEl.innerHTML = '';
+
           if (currentAccounts.length === 0) {
-            selectEl.options.add(new Option("Keine Accounts vorhanden", "-1"));
+            selectEl.options.add(new Option("No accounts available", "-1"));
           } else {
-            // Neue Optionen schreiben
             currentAccounts.forEach(function(acc, idx) {
               selectEl.options.add(new Option((idx + 1) + ". " + acc.ACCOUNT_NAME, idx));
             });
           }
-          
-          // ZWINGT Clay dazu, das eigene UI zu aktualisieren, damit du die Einträge auch siehst!
+
           dropdownItem.set(selectEl.options[0].value);
         }
       }
     }
 
-    // Start: Einmal abgleichen und Dropdown befüllen
-    saveAccounts(getAccounts());
-    setTimeout(updateUI, 100);
-
-    // --- BUTTON: IMPORTIEREN ---
-    clayConfig.getItemById('btn_import').on('click', function() {
+    function onImport() {
       var inputField = clayConfig.getItemById('import_text');
       var text = inputField.get();
       if (text) {
@@ -101,19 +75,18 @@ module.exports = function() {
         if (newAccs.length > 0) {
           accs = accs.concat(newAccs);
           saveAccounts(accs);
-          updateUI(); // Baut das Dropdown mit den neuen Accounts frisch auf
+          updateUI();
           inputField.set('');
-          showStatus(newAccs.length + " Accounts importiert!");
+          showStatus(newAccs.length + " accounts imported!");
         } else {
-          showStatus("Fehler: Keine gültigen Links.");
+          showStatus("Error: No valid links.");
         }
       } else {
-        showStatus("Fehler: Import-Feld ist leer.");
+        showStatus("Error: Import field is empty.");
       }
-    });
+    }
 
-    // --- BUTTON: MANUELL HINZUFÜGEN ---
-    clayConfig.getItemById('btn_add').on('click', function() {
+    function onAdd() {
       var nameField = clayConfig.getItemById('manual_name');
       var secField = clayConfig.getItemById('manual_secret');
       var n = nameField.get().trim();
@@ -123,53 +96,75 @@ module.exports = function() {
         var accs = getAccounts();
         accs.push({ 'ACCOUNT_NAME': n, 'ACCOUNT_SECRET': s.replace(/\s+/g, '').toUpperCase() });
         saveAccounts(accs);
-        updateUI(); // Baut das Dropdown frisch auf
+        updateUI();
         nameField.set('');
         secField.set('');
-        showStatus("Account manuell hinzugefügt!");
+        showStatus("Account added manually!");
       } else {
-        showStatus("Fehler: Bitte Name und Secret eingeben.");
+        showStatus("Error: Please enter Name and Secret.");
       }
-    });
+    }
 
-    // --- BUTTON: EINZELN LÖSCHEN (REPARIERT) ---
-    clayConfig.getItemById('btn_delete_single').on('click', function() {
-      // Wir fragen direkt Clay, was der Nutzer im Dropdown gewählt hat!
+    var clearClicks = 0;
+    function onDeleteSingle() {
       var dropdownItem = clayConfig.getItemById('account_dropdown');
-      var selectedValue = dropdownItem.get(); 
+      var selectedValue = dropdownItem.get();
 
-      // Wenn ein gültiger Wert (nicht leer und nicht "-1") gewählt wurde
       if (selectedValue !== null && selectedValue !== "-1" && selectedValue !== "") {
         var idx = parseInt(selectedValue, 10);
         var accs = getAccounts();
-        
-        // Sicherheits-Check, ob die Zahl im Array existiert
+
         if (!isNaN(idx) && idx >= 0 && idx < accs.length) {
-          accs.splice(idx, 1); // Exakt diesen Eintrag entfernen
+          accs.splice(idx, 1);
           saveAccounts(accs);
-          updateUI(); // Dropdown aktualisieren (der gelöschte verschwindet)
-          showStatus("Account erfolgreich gelöscht!");
+          updateUI();
+          showStatus("Account successfully deleted!");
         } else {
-          showStatus("Fehler: Ungültiger Index.");
+          showStatus("Error: Invalid index.");
         }
       } else {
-        showStatus("Fehler: Kein Account ausgewählt.");
+        showStatus("Error: No account selected.");
       }
-    });
+    }
 
-    // --- BUTTON: ALLES LÖSCHEN ---
-    var clearClicks = 0;
-    clayConfig.getItemById('btn_clear_all').on('click', function() {
+    function onClearAll() {
       if (clearClicks === 0) {
-        showStatus("Wirklich ALLE löschen? Klicke erneut!");
+        showStatus("Really delete ALL? Click again!");
         clearClicks++;
         setTimeout(function() { clearClicks = 0; }, 4000);
       } else {
         saveAccounts([]);
         updateUI();
-        showStatus("ALLE Accounts wurden gelöscht!");
+        showStatus("ALL accounts have been deleted!");
         clearClicks = 0;
       }
-    });
+    }
+
+    function bindButtonByLabel(label, callback) {
+      var allButtons = document.querySelectorAll('button');
+      for (var i = 0; i < allButtons.length; i++) {
+        if (allButtons[i].innerText.trim().toUpperCase() === label.toUpperCase()) {
+          allButtons[i].addEventListener('touchend', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            callback();
+          });
+          allButtons[i].addEventListener('click', function(e) {
+            e.preventDefault();
+            callback();
+          });
+          return;
+        }
+      }
+    }
+
+    updateUI();
+
+    bindButtonByLabel('Import',                  onImport);
+    bindButtonByLabel('Add',                     onAdd);
+    bindButtonByLabel('Delete Selected Account', onDeleteSingle);
+    bindButtonByLabel('Delete ALL Accounts',     onClearAll);
+
+    showStatus("Ready.");
   });
 };

@@ -109,7 +109,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
 
     // 2. Text gut sichtbar in Schwarz zeichnen
     graphics_context_set_text_color(ctx, GColorBlack);
-    graphics_draw_text(ctx, "Keine Accounts!\nBitte App-Settings öffnen.", 
+    graphics_draw_text(ctx, "No Accounts!\nPlease add Accounts in the App-Settings.", 
                        fonts_get_system_font(FONT_NAME), 
                        GRect(5, 5, bounds.size.w - 10, bounds.size.h - 10), 
                        GTextOverflowModeWordWrap, 

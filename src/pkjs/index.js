@@ -2,10 +2,10 @@ var Clay = require('@rebble/clay');
 var clayConfig = require('./clay-config.json');
 var customClay = require('./custom-clay.js'); 
 
-var clay = new Clay(clayConfig, customClay, { autoHandleEvents: false }); 
+var clay = new Clay(clayConfig, customClay, { autoHandleEvents: true }); 
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  // Kein URL-Trick mehr nötig. Öffnet einfach die Seite.
+  // No URL trick needed anymore. Simply opens the page.
   Pebble.openURL(clay.generateUrl());
 });
 
@@ -24,26 +24,26 @@ Pebble.addEventListener('webviewclosed', function(e) {
     try {
       accounts = JSON.parse(rawData);
     } catch(err) {
-      console.log("Fehler beim Parsen der Liste.");
+      console.log("Error parsing the list.");
     }
   }
 
-  console.log("Sende " + accounts.length + " Accounts an die Uhr.");
+  console.log("Sending " + accounts.length + " accounts to the watch.");
 
   Pebble.sendAppMessage({ 'CLEAR_ACCOUNTS': 1 }, function() {
     if (accounts.length > 0) {
       sendNextAccount(accounts, 0);
     } else {
-      Pebble.showSimpleNotificationOnPebble("Authenticator", "Keine Accounts auf der Uhr.");
+      Pebble.showSimpleNotificationOnPebble("Authenticator", "No accounts on the watch.");
     }
   }, function(error) {
-    console.log("Fehler beim Leeren: " + JSON.stringify(error));
+    console.log("Error clearing: " + JSON.stringify(error));
   });
 });
 
 function sendNextAccount(accounts, index) {
   if (index >= accounts.length) {
-    Pebble.showSimpleNotificationOnPebble("Authenticator", accounts.length + " Accounts gespeichert!");
+    Pebble.showSimpleNotificationOnPebble("Authenticator", accounts.length + " accounts saved!");
     return;
   }
 
