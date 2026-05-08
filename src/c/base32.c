@@ -8,7 +8,6 @@ int base32_decode(const uint8_t *encoded, uint8_t *result, int bufSize) {
     for (const uint8_t *ptr = encoded; count < bufSize && *ptr; ++ptr) {
         uint8_t ch = *ptr;
         
-        // Leerzeichen und Bindestriche ignorieren (kommen manchmal beim Kopieren vor)
         if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n' || ch == '-') {
             continue;
         }
@@ -19,13 +18,13 @@ int base32_decode(const uint8_t *encoded, uint8_t *result, int bufSize) {
         if (ch >= 'A' && ch <= 'Z') {
             buffer |= (ch - 'A');
         } else if (ch >= 'a' && ch <= 'z') {
-            buffer |= (ch - 'a'); // Falls Kleinbuchstaben reinkommen
+            buffer |= (ch - 'a'); 
         } else if (ch >= '2' && ch <= '7') {
             buffer |= (ch - '2' + 26);
         } else if (ch == '=') {
-            break; // Padding (Füllzeichen am Ende) erreicht -> Fertig!
+            break; 
         } else {
-            return -1; // Ungültiges Zeichen gefunden
+            return -1; 
         }
 
         bitsLeft += 5;

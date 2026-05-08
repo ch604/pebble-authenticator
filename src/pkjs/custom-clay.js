@@ -30,7 +30,6 @@ module.exports = function() {
       if (statusBar) statusBar.set(msg);
     }
 
-    // Clay saves hidden_data persistently thanks to autoHandleEvents: true in index.js
     function getAccounts() {
       try {
         var val = hiddenData.get();

@@ -4,12 +4,12 @@
         "@rebble/clay": "^1.0.8"
     },
     "keywords": [],
-    "name": "better-authenticator",
+    "name": "authenticator",
     "pebble": {
         "capabilities": [
             "configurable"
         ],
-        "displayName": "Better Authenticator",
+        "displayName": "Authenticator",
         "enableMultiJS": true,
         "messageKeys": [
             "CLEAR_ACCOUNTS",
@@ -21,6 +21,7 @@
             "media": [
                 {
                     "file": "images/menu_icon.png",
+                    "menuIcon": true,
                     "name": "menu_icon",
                     "targetPlatforms": null,
                     "type": "bitmap"
@@ -29,18 +30,13 @@
         },
         "sdkVersion": "3",
         "targetPlatforms": [
-            "aplite",
             "basalt",
-            "chalk",
-            "diorite",
-            "emery",
-            "gabbro",
-            "flint"
+            "emery"
         ],
         "uuid": "0a8a3e0d-428f-4708-93e7-0c55448d5ab0",
         "watchapp": {
             "watchface": false
         }
     },
-    "version": "1.2.0"
+    "version": "1.3.2"
 }

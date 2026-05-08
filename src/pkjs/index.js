@@ -5,7 +5,6 @@ var customClay = require('./custom-clay.js');
 var clay = new Clay(clayConfig, customClay, { autoHandleEvents: true }); 
 
 Pebble.addEventListener('showConfiguration', function(e) {
-  // No URL trick needed anymore. Simply opens the page.
   Pebble.openURL(clay.generateUrl());
 });
 
