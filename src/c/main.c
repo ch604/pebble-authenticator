@@ -2,7 +2,7 @@
 #include "sha1.h"
 #include "base32.h"
 
-#define MAX_ACCOUNTS 20
+#define MAX_ACCOUNTS 100
 #define MAX_NAME_LEN 32
 #define MAX_SECRET_LEN 80  // <-- Platz für gigantisch lange Secrets (z.B. AWS)
 
