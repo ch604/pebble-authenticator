@@ -7,7 +7,7 @@
     "type": "input",
     "id": "import_text",
     "label": "Import",
-    "description": "Paste your otpauth:// links here. Multiple links are allowed."
+    "description": "Paste your otpauth:// links here. Multiple entrys are allowed."
   },
   {
     "type": "button",
