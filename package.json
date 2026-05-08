@@ -9,7 +9,7 @@
         "capabilities": [
             "configurable"
         ],
-        "displayName": "Pebble Auth",
+        "displayName": "Authenticator",
         "enableMultiJS": true,
         "messageKeys": [
             "CLEAR_ACCOUNTS",
