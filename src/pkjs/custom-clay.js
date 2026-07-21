@@ -49,26 +49,108 @@ module.exports = function() {
       hiddenData.set(JSON.stringify(accs));
     }
 
+    // Distance (px) a touch may drift before it's treated as a scroll instead of a tap.
+    var TAP_MOVE_THRESHOLD = 10;
+
+    // Adds tap-to-select support to a scrollable container without breaking
+    // native touch scrolling: a touchend only fires the callback if the
+    // finger didn't move more than TAP_MOVE_THRESHOLD px since touchstart.
+    function attachTapSelection(container, onSelect) {
+      var startX = 0, startY = 0, moved = false;
+
+      container.addEventListener('touchstart', function(e) {
+        if (!e.touches || !e.touches.length) return;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        moved = false;
+      }, { passive: true });
+
+      container.addEventListener('touchmove', function(e) {
+        if (!e.touches || !e.touches.length) return;
+        var dx = e.touches[0].clientX - startX;
+        var dy = e.touches[0].clientY - startY;
+        if (Math.abs(dx) > TAP_MOVE_THRESHOLD || Math.abs(dy) > TAP_MOVE_THRESHOLD) {
+          moved = true;
+        }
+      }, { passive: true });
+
+      container.addEventListener('touchend', function(e) {
+        if (moved) return; // was a scroll gesture, let it scroll
+        var row = e.target.closest ? e.target.closest('[data-idx]') : null;
+        if (!row) return;
+        e.preventDefault();
+        onSelect(row);
+      });
+
+      // Non-touch fallback (desktop testing / phone webviews that fire click).
+      container.addEventListener('click', function(e) {
+        var row = e.target.closest ? e.target.closest('[data-idx]') : null;
+        if (!row) return;
+        onSelect(row);
+      });
+    }
+
     function updateUI() {
       var currentAccounts = getAccounts();
       var dropdownItem = clayConfig.getItemById('account_dropdown');
 
-      if (dropdownItem && dropdownItem.$element) {
-        var selectEl = dropdownItem.$element[0].querySelector('select');
+      if (!dropdownItem || !dropdownItem.$element) return;
 
-        if (selectEl) {
-          selectEl.innerHTML = '';
+      var wrapperEl = dropdownItem.$element[0];
+      var selectEl = wrapperEl.querySelector('select');
+      if (!selectEl) return;
 
-          if (currentAccounts.length === 0) {
-            selectEl.options.add(new Option("No accounts available", "-1"));
-          } else {
-            currentAccounts.forEach(function(acc, idx) {
-              selectEl.options.add(new Option((idx + 1) + ". " + acc.ACCOUNT_NAME, idx));
-            });
+      // Keep the real <select> in sync — it's still what dropdownItem.get()/set()
+      // read from, and what persists the choice, we just stop showing it.
+      selectEl.innerHTML = '';
+      if (currentAccounts.length === 0) {
+        selectEl.options.add(new Option("No accounts available", "-1"));
+      } else {
+        currentAccounts.forEach(function(acc, idx) {
+          var label = (idx + 1) + ". " + acc.ACCOUNT_NAME +
+            (acc.ACCOUNT_PERIOD && acc.ACCOUNT_PERIOD !== 30 ? " (" + acc.ACCOUNT_PERIOD + "s)" : "");
+          selectEl.options.add(new Option(label, idx));
+        });
+      }
+      dropdownItem.set(selectEl.options[0].value);
+      selectEl.style.display = 'none';
+
+      // Build (or reuse) a touch-friendly list mirroring the select's options.
+      var listEl = wrapperEl.querySelector('.account-touch-list');
+      if (!listEl) {
+        listEl = document.createElement('div');
+        listEl.className = 'account-touch-list';
+        listEl.style.cssText =
+          'max-height:200px;overflow-y:auto;-webkit-overflow-scrolling:touch;' +
+          'border:1px solid #ccc;border-radius:4px;margin-top:6px;background:#fff;';
+        wrapperEl.appendChild(listEl);
+
+        attachTapSelection(listEl, function(row) {
+          dropdownItem.set(row.getAttribute('data-idx'));
+          var rows = listEl.querySelectorAll('[data-idx]');
+          for (var r = 0; r < rows.length; r++) {
+            rows[r].style.background = '';
+            rows[r].style.color = '';
           }
+          row.style.background = '#4a90d9';
+          row.style.color = '#fff';
+        });
+      }
 
-          dropdownItem.set(selectEl.options[0].value);
+      listEl.innerHTML = '';
+      for (var idx = 0; idx < selectEl.options.length; idx++) {
+        var opt = selectEl.options[idx];
+        var row = document.createElement('div');
+        row.textContent = opt.text;
+        row.setAttribute('data-idx', opt.value);
+        row.style.cssText =
+          'padding:10px 8px;border-bottom:1px solid #eee;font-size:14px;' +
+          (idx === selectEl.options.length - 1 ? 'border-bottom:none;' : '');
+        if (idx === 0) {
+          row.style.background = '#4a90d9';
+          row.style.color = '#fff';
         }
+        listEl.appendChild(row);
       }
     }
 
