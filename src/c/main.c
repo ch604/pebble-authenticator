@@ -12,14 +12,17 @@
 #if defined(PBL_PLATFORM_EMERY)
   #define ROW_HEIGHT 72
   #define FONT_CODE FONT_KEY_BITHAM_30_BLACK
+  #define FONT_CODE_8DIGIT FONT_KEY_GOTHIC_28_BOLD
   #define FONT_NAME FONT_KEY_GOTHIC_24_BOLD
 #elif defined(PBL_COLOR)
   #define ROW_HEIGHT 60
   #define FONT_CODE FONT_KEY_BITHAM_30_BLACK
+  #define FONT_CODE_8DIGIT FONT_KEY_GOTHIC_24_BOLD
   #define FONT_NAME FONT_KEY_GOTHIC_18_BOLD
 #else
   #define ROW_HEIGHT 60
   #define FONT_CODE FONT_KEY_BITHAM_30_BLACK
+  #define FONT_CODE_8DIGIT FONT_KEY_GOTHIC_24_BOLD
   #define FONT_NAME FONT_KEY_GOTHIC_18_BOLD
 #endif
 
@@ -127,7 +130,8 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   graphics_draw_text(ctx, account->name, fonts_get_system_font(FONT_NAME), name_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
 
   GRect code_rect = GRect(5, 28, bounds.size.w - 10, bounds.size.h - 28);
-  graphics_draw_text(ctx, code_buffer, fonts_get_system_font(FONT_CODE), code_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
+  GFont code_font = fonts_get_system_font(digits == 8 ? FONT_CODE_8DIGIT : FONT_CODE);
+  graphics_draw_text(ctx, code_buffer, code_font, code_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 
   time_t now = time(NULL);
   int seconds_remaining = period - (now % period);
