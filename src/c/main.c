@@ -35,6 +35,12 @@ typedef struct {
 
 static Window *s_main_window;
 static MenuLayer *s_menu_layer;
+static bool s_touch_subscribed = false;
+
+// Drag-scroll state, used only on platforms where touch is present and enabled.
+static bool s_touch_dragging = false;
+static int16_t s_touch_start_y = 0;
+static GPoint s_touch_start_offset;
 
 static Account s_accounts[MAX_ACCOUNTS];
 static int s_num_accounts = 0;
@@ -183,6 +189,65 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
 }
 
+// Drives touch-drag scrolling of the account list on watches with a
+// touchscreen (e.g. Pebble Time 2 / Emery). Only ever subscribed after
+// confirming touch_service_is_enabled(), so this never runs on hardware
+// without a touchscreen or when the user has disabled touch in Settings.
+static void touch_handler(const TouchEvent *event, void *context) {
+  if (!s_menu_layer) return;
+  ScrollLayer *scroll_layer = menu_layer_get_scroll_layer(s_menu_layer);
+  if (!scroll_layer) return;
+
+  switch (event->type) {
+    case TouchEvent_Touchdown:
+      s_touch_dragging = true;
+      s_touch_start_y = event->y;
+      s_touch_start_offset = scroll_layer_get_content_offset(scroll_layer);
+      break;
+
+    case TouchEvent_PositionUpdate: {
+      if (!s_touch_dragging) break;
+
+      int16_t dy = event->y - s_touch_start_y;
+      GPoint new_offset = s_touch_start_offset;
+      new_offset.y += dy; // dragging finger down increases offset.y (scrolls up)
+
+      GSize content_size = scroll_layer_get_content_size(scroll_layer);
+      GRect frame = layer_get_bounds(scroll_layer_get_layer(scroll_layer));
+      int16_t max_scroll = content_size.h - frame.size.h;
+      if (max_scroll < 0) max_scroll = 0;
+
+      if (new_offset.y > 0) new_offset.y = 0;
+      if (new_offset.y < -max_scroll) new_offset.y = -max_scroll;
+
+      // Not animated: it needs to track the finger 1:1, not ease toward it.
+      scroll_layer_set_content_offset(scroll_layer, new_offset, false);
+      break;
+    }
+
+    case TouchEvent_Liftoff:
+      s_touch_dragging = false;
+      break;
+  }
+}
+
+static void main_window_appear(Window *window) {
+  if (touch_service_is_enabled()) {
+    touch_service_subscribe(touch_handler, NULL);
+    s_touch_subscribed = true;
+  }
+  // If touch isn't available or is disabled in Settings, the app falls back
+  // to the existing UP/DOWN button scrolling with no further action needed.
+}
+
+static void main_window_disappear(Window *window) {
+  if (s_touch_subscribed) {
+    touch_service_unsubscribe();
+    s_touch_subscribed = false;
+  }
+  s_touch_dragging = false;
+}
+
 static void main_window_load(Window *window) {
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -224,6 +289,8 @@ static void init() {
   window_set_window_handlers(s_main_window, (WindowHandlers) {
     .load = main_window_load,
     .unload = main_window_unload,
+    .appear = main_window_appear,
+    .disappear = main_window_disappear,
   });
   window_stack_push(s_main_window, true);
 
