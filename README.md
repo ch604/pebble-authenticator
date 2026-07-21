@@ -10,7 +10,7 @@ A lightweight, secure, and fully offline Two-Factor Authentication (2FA / TOTP) 
 * **Manual Entry:** Add accounts manually by entering the Account Name and the Base32 Secret Key.
 * **High Capacity:** Stores and manages up to 100 different 2FA accounts natively on your watch.
 * **Clean Interface:** Optimized for readability on Pebble displays (especially Pebble Time 2), featuring large, bold fonts and an animated progress bar to show when the next code will arrive. Now with touch support!
-* **Easy Management:** View and delete individual accounts directly from the Pebble app configuration screen.
+* **Easy Management:** View, reorder, and delete individual accounts directly from the Pebble app configuration screen.
 
 ##  Built With
 
@@ -29,7 +29,14 @@ A lightweight, secure, and fully offline Two-Factor Authentication (2FA / TOTP) 
 
 * **SHA1 Implementation:** The core cryptographic logic (SHA1/HMAC) used to generate the TOTP codes is adapted from the excellent [neal/pebble-authenticator](https://github.com/neal/pebble-authenticator) repository.
 
-## 🤖 Disclaimer (AI Assisted)
+## Disclaimers
+
+### Missing Features
+
+* Only TOTP codes are supported, not HOTP.
+* SHA1 encoding is presumed for all codes, SHA256/512 are not supported.
+
+### 🤖 AI Assisted
 
 This application was developed with the assistance of Google's **Gemini AI** and Anthropic's **Claude**. It helped in bridging the gap between modern JavaScript configuration tools (Clay) and the Pebble C SDK. 
 
