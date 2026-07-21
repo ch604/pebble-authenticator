@@ -9,22 +9,26 @@
 #define PERSIST_KEY_NUM_ACCOUNTS 100
 #define PERSIST_KEY_ACCOUNT_BASE 200
 
-#if defined(PBL_PLATFORM_EMERY)
-  #define ROW_HEIGHT 72
-  #define FONT_CODE FONT_KEY_BITHAM_30_BLACK
-  #define FONT_CODE_8DIGIT FONT_KEY_GOTHIC_28_BOLD
+// Row height and name-label size scale with the actual display height.
+// This means new/round platforms (Chalk, Gabbro) get a sensible size.
+#if PBL_DISPLAY_HEIGHT >= 260
+  #define ROW_HEIGHT 84
   #define FONT_NAME FONT_KEY_GOTHIC_24_BOLD
-#elif defined(PBL_COLOR)
-  #define ROW_HEIGHT 60
-  #define FONT_CODE FONT_KEY_BITHAM_30_BLACK
-  #define FONT_CODE_8DIGIT FONT_KEY_GOTHIC_24_BOLD
+#elif PBL_DISPLAY_HEIGHT >= 228
+  #define ROW_HEIGHT 72
+  #define FONT_NAME FONT_KEY_GOTHIC_24_BOLD
+#elif PBL_DISPLAY_HEIGHT >= 180
+  #define ROW_HEIGHT 64
   #define FONT_NAME FONT_KEY_GOTHIC_18_BOLD
 #else
   #define ROW_HEIGHT 60
-  #define FONT_CODE FONT_KEY_BITHAM_30_BLACK
-  #define FONT_CODE_8DIGIT FONT_KEY_GOTHIC_24_BOLD
   #define FONT_NAME FONT_KEY_GOTHIC_18_BOLD
 #endif
+
+// pick_code_font() (below) measures the rendered width of the actual code
+// text and only drops to the smaller one if the big one wouldn't fit
+#define FONT_CODE FONT_KEY_BITHAM_30_BLACK
+#define FONT_CODE_SMALL FONT_KEY_GOTHIC_24_BOLD
 
 typedef struct {
   char name[MAX_NAME_LEN];
@@ -105,6 +109,21 @@ static int16_t menu_get_cell_height_callback(MenuLayer *menu_layer, MenuIndex *c
   return ROW_HEIGHT;
 }
 
+// Picks the code font by measuring how wide `code_text` actually renders at
+// full size, rather than guessing from digit count or platform name.
+static GFont pick_code_font(const char *code_text, GRect code_rect) {
+  GFont big_font = fonts_get_system_font(FONT_CODE);
+
+  GRect measure_box = GRect(0, 0, 1000, code_rect.size.h);
+  GSize natural_size = graphics_text_layout_get_content_size(
+    code_text, big_font, measure_box, GTextOverflowModeFill, GTextAlignmentCenter);
+
+  if (natural_size.w <= code_rect.size.w) {
+    return big_font;
+  }
+  return fonts_get_system_font(FONT_CODE_SMALL);
+}
+
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
   GRect bounds = layer_get_bounds(cell_layer);
   
@@ -136,7 +155,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   graphics_draw_text(ctx, account->name, fonts_get_system_font(FONT_NAME), name_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
 
   GRect code_rect = GRect(5, 28, bounds.size.w - 10, bounds.size.h - 28);
-  GFont code_font = fonts_get_system_font(digits == 8 ? FONT_CODE_8DIGIT : FONT_CODE);
+  GFont code_font = pick_code_font(code_buffer, code_rect);
   graphics_draw_text(ctx, code_buffer, code_font, code_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 
   time_t now = time(NULL);
