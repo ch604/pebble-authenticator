@@ -15,7 +15,8 @@
             "CLEAR_ACCOUNTS",
             "ACCOUNT_NAME",
             "ACCOUNT_SECRET",
-            "ACCOUNT_PERIOD"
+            "ACCOUNT_PERIOD",
+            "ACCOUNT_DIGITS"
         ],
         "projectType": "native",
         "resources": {

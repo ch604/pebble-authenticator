@@ -13,16 +13,20 @@ module.exports = function() {
       var s = part.match(/[?&]secret=([^&\s]+)/);
       var i = part.match(/[?&]issuer=([^&\n\r]+)/);
       var p = part.match(/[?&]period=(\d+)/);
+      var d = part.match(/[?&]digits=(\d+)/);
       var path = part.split('?')[0];
       var name = safeDecode(path).trim();
       var issuer = i ? safeDecode(i[1]).trim() : name;
       var period = p ? parseInt(p[1], 10) : 30;
       if (isNaN(period) || period <= 0) period = 30;
+      var digits = d ? parseInt(d[1], 10) : 6;
+      if (digits !== 6 && digits !== 8) digits = 6;
       if (s) {
         parsed.push({
           'ACCOUNT_NAME': issuer,
           'ACCOUNT_SECRET': s[1].trim().toUpperCase(),
-          'ACCOUNT_PERIOD': period
+          'ACCOUNT_PERIOD': period,
+          'ACCOUNT_DIGITS': digits
         });
       }
     });
@@ -107,8 +111,10 @@ module.exports = function() {
         selectEl.options.add(new Option("No accounts available", "-1"));
       } else {
         currentAccounts.forEach(function(acc, idx) {
-          var label = (idx + 1) + ". " + acc.ACCOUNT_NAME +
-            (acc.ACCOUNT_PERIOD && acc.ACCOUNT_PERIOD !== 30 ? " (" + acc.ACCOUNT_PERIOD + "s)" : "");
+          var badges = [];
+          if (acc.ACCOUNT_PERIOD && acc.ACCOUNT_PERIOD !== 30) badges.push(acc.ACCOUNT_PERIOD + "s");
+          if (acc.ACCOUNT_DIGITS && acc.ACCOUNT_DIGITS !== 6) badges.push(acc.ACCOUNT_DIGITS + "-digit");
+          var label = (idx + 1) + ". " + acc.ACCOUNT_NAME + (badges.length ? " (" + badges.join(", ") + ")" : "");
           selectEl.options.add(new Option(label, idx));
         });
       }
@@ -178,17 +184,21 @@ module.exports = function() {
       var nameField = clayConfig.getItemById('manual_name');
       var secField = clayConfig.getItemById('manual_secret');
       var periodField = clayConfig.getItemById('manual_period');
+      var digitsField = clayConfig.getItemById('manual_digits');
       var n = nameField.get().trim();
       var s = secField.get().trim();
       var period = periodField ? parseInt(periodField.get(), 10) : 30;
       if (isNaN(period) || period <= 0) period = 30;
+      var digits = digitsField ? parseInt(digitsField.get(), 10) : 6;
+      if (digits !== 6 && digits !== 8) digits = 6;
 
       if (n && s) {
         var accs = getAccounts();
         accs.push({
           'ACCOUNT_NAME': n,
           'ACCOUNT_SECRET': s.replace(/\s+/g, '').toUpperCase(),
-          'ACCOUNT_PERIOD': period
+          'ACCOUNT_PERIOD': period,
+          'ACCOUNT_DIGITS': digits
         });
         saveAccounts(accs);
         updateUI();
