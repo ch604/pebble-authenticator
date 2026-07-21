@@ -12,11 +12,18 @@ module.exports = function() {
       if (!part.trim()) return;
       var s = part.match(/[?&]secret=([^&\s]+)/);
       var i = part.match(/[?&]issuer=([^&\n\r]+)/);
+      var p = part.match(/[?&]period=(\d+)/);
       var path = part.split('?')[0];
       var name = safeDecode(path).trim();
       var issuer = i ? safeDecode(i[1]).trim() : name;
+      var period = p ? parseInt(p[1], 10) : 30;
+      if (isNaN(period) || period <= 0) period = 30;
       if (s) {
-        parsed.push({ 'ACCOUNT_NAME': issuer, 'ACCOUNT_SECRET': s[1].trim().toUpperCase() });
+        parsed.push({
+          'ACCOUNT_NAME': issuer,
+          'ACCOUNT_SECRET': s[1].trim().toUpperCase(),
+          'ACCOUNT_PERIOD': period
+        });
       }
     });
     return parsed;
@@ -88,12 +95,19 @@ module.exports = function() {
     function onAdd() {
       var nameField = clayConfig.getItemById('manual_name');
       var secField = clayConfig.getItemById('manual_secret');
+      var periodField = clayConfig.getItemById('manual_period');
       var n = nameField.get().trim();
       var s = secField.get().trim();
+      var period = periodField ? parseInt(periodField.get(), 10) : 30;
+      if (isNaN(period) || period <= 0) period = 30;
 
       if (n && s) {
         var accs = getAccounts();
-        accs.push({ 'ACCOUNT_NAME': n, 'ACCOUNT_SECRET': s.replace(/\s+/g, '').toUpperCase() });
+        accs.push({
+          'ACCOUNT_NAME': n,
+          'ACCOUNT_SECRET': s.replace(/\s+/g, '').toUpperCase(),
+          'ACCOUNT_PERIOD': period
+        });
         saveAccounts(accs);
         updateUI();
         nameField.set('');

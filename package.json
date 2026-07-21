@@ -14,7 +14,8 @@
         "messageKeys": [
             "CLEAR_ACCOUNTS",
             "ACCOUNT_NAME",
-            "ACCOUNT_SECRET"
+            "ACCOUNT_SECRET",
+            "ACCOUNT_PERIOD"
         ],
         "projectType": "native",
         "resources": {

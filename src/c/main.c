@@ -26,6 +26,7 @@
 typedef struct {
   char name[MAX_NAME_LEN];
   char secret[MAX_SECRET_LEN];
+  uint8_t period; // TOTP validity window in seconds (e.g. 30 or 60)
 } Account;
 
 static Window *s_main_window;
@@ -34,7 +35,7 @@ static MenuLayer *s_menu_layer;
 static Account s_accounts[MAX_ACCOUNTS];
 static int s_num_accounts = 0;
 
-static void generate_totp_string(const char *secret, char *out_buffer, size_t out_len) {
+static void generate_totp_string(const char *secret, uint8_t period, char *out_buffer, size_t out_len) {
   uint8_t key[128]; 
   int key_len = base32_decode((const uint8_t *)secret, key, sizeof(key));
 
@@ -44,7 +45,8 @@ static void generate_totp_string(const char *secret, char *out_buffer, size_t ou
     return;
   }
 
-  uint64_t t = time(NULL) / 30;
+  if (period == 0) period = 30;
+  uint64_t t = time(NULL) / period;
 
   uint8_t time_bytes[8];
   for (int i = 7; i >= 0; i--) {
@@ -103,8 +105,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   }
 
   Account *account = &s_accounts[cell_index->row];
+  uint8_t period = account->period ? account->period : 30;
   char code_buffer[8];
-  generate_totp_string(account->secret, code_buffer, sizeof(code_buffer));
+  generate_totp_string(account->secret, period, code_buffer, sizeof(code_buffer));
 
   bool is_selected = menu_cell_layer_is_highlighted(cell_layer);
   
@@ -116,9 +119,9 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   graphics_draw_text(ctx, code_buffer, fonts_get_system_font(FONT_CODE), code_rect, GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 
   time_t now = time(NULL);
-  int seconds_remaining = 30 - (now % 30);
+  int seconds_remaining = period - (now % period);
   
-  int bar_width = (bounds.size.w * seconds_remaining) / 30;
+  int bar_width = (bounds.size.w * seconds_remaining) / period;
   GRect bar_rect = GRect(0, bounds.size.h - 4, bar_width, 4);
   
   #if defined(PBL_COLOR)
@@ -141,10 +144,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
 
   Tuple *name_tuple = dict_find(iterator, MESSAGE_KEY_ACCOUNT_NAME);
   Tuple *secret_tuple = dict_find(iterator, MESSAGE_KEY_ACCOUNT_SECRET);
+  Tuple *period_tuple = dict_find(iterator, MESSAGE_KEY_ACCOUNT_PERIOD);
 
   if (name_tuple && secret_tuple && s_num_accounts < MAX_ACCOUNTS) {
     strncpy(s_accounts[s_num_accounts].name, name_tuple->value->cstring, MAX_NAME_LEN - 1);
     strncpy(s_accounts[s_num_accounts].secret, secret_tuple->value->cstring, MAX_SECRET_LEN - 1);
+    s_accounts[s_num_accounts].period = period_tuple ? (uint8_t)period_tuple->value->int32 : 30;
     
     persist_write_data(PERSIST_KEY_ACCOUNT_BASE + s_num_accounts, &s_accounts[s_num_accounts], sizeof(Account));
     
